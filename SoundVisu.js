@@ -1,13 +1,20 @@
 var $ = document.querySelector.bind(document);;
+navigator.getUserMedia = (navigator.getUserMedia ||
+                          navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia ||
+                          navigator.msGetUserMedia);
+
 
 var contexteAudio = new AudioContext();
+var source;
 
 var oscillateur = contexteAudio.createOscillator();
 var noeudGain = contexteAudio.createGain();
-var analyser = contexteAudio.createAnalyser();
+var analyserOut = contexteAudio.createAnalyser();
+var analyserIn = contexteAudio.createAnalyser();
 
-analyser.smoothingTimeConstant = 0.85;
-oscillateur.connect(analyser);
+analyserOut.smoothingTimeConstant = 0.85;
+oscillateur.connect(analyserOut);
 oscillateur.connect(noeudGain);
 noeudGain.connect(contexteAudio.destination);
 
@@ -31,7 +38,7 @@ $(".play").onclick = function(e) {
 		console.log("player set to off");
 	}
 	else {
-		console.log("wubba lubba dub dub");
+		console.log("error : " + e);
 	}
 }
 
@@ -49,7 +56,7 @@ $(".mute").onclick = function(e) {
 		$(".mute").textContent = "mute";
 	}
 	else {
-		console.log("wubba lubba dub dub");
+		console.log("error : " + e);
 	}
 }
 
@@ -88,79 +95,79 @@ function updatePage(e) {
 var largeur = window.innerWidth/2 - 50;
 var hauteur = window.innerHeight/2 - 100;
 
-var canvasTime = document.querySelector('.canvasTime');
-var canvasFreq = document.querySelector('.canvasFreq');
+var canvasTimeOut = document.querySelector('.canvasTimeOut');
+var canvasFreqOut = document.querySelector('.canvasFreqOut');
 
-canvasTime.width = largeur;
-canvasTime.height = hauteur;
-canvasFreq.width = largeur;
-canvasFreq.height = hauteur;
+canvasTimeOut.width = largeur;
+canvasTimeOut.height = hauteur;
+canvasFreqOut.width = largeur;
+canvasFreqOut.height = hauteur;
 
-var contexteCanvasTime = canvasTime.getContext('2d');
-var contexteCanvasFreq = canvasFreq.getContext('2d');
+var contexteCanvasTimeOut = canvasTimeOut.getContext('2d');
+var contexteCanvasFreqOut = canvasFreqOut.getContext('2d');
 
 //affichage
 function canvasDraw() {
   //affichage temps
   function DrawTime() {
-      analyser.fftSize = 2048;
-      var bufferLength = analyser.fftSize;
+      analyserOut.fftSize = 2048;
+      var bufferLength = analyserOut.fftSize;
       var dataArray = new Uint8Array(bufferLength);
 
-      analyser.getByteTimeDomainData(dataArray);
+      analyserOut.getByteTimeDomainData(dataArray);
 
        drawVisual = requestAnimationFrame(canvasDraw);
 
-      contexteCanvasTime.fillStyle = 'rgb(200, 200, 200)';
-      contexteCanvasTime.fillRect(0, 0, canvasTime.width, canvasTime.height);
+      contexteCanvasTimeOut.fillStyle = 'rgb(200, 200, 200)';
+      contexteCanvasTimeOut.fillRect(0, 0, canvasTimeOut.width, canvasTimeOut.height);
 
-      contexteCanvasTime.lineWidth = 2;
-      contexteCanvasTime.strokeStyle = 'rgb(0, 0, 0)';
+      contexteCanvasTimeOut.lineWidth = 2;
+      contexteCanvasTimeOut.strokeStyle = 'rgb(0, 0, 0)';
 
-      contexteCanvasTime.beginPath();
+      contexteCanvasTimeOut.beginPath();
 
-      var sliceWidth = canvasTime.width * 1.0 / bufferLength;
+      var sliceWidth = canvasTimeOut.width * 1.0 / bufferLength;
       var x = 0;
 
       for (var i = 0; i < bufferLength; i++) {
 
         var v = dataArray[i] / 128.0;
-        var y = v * canvasTime.height / 2;
+        var y = v * canvasTimeOut.height / 2;
 
         if (i === 0) {
-          contexteCanvasTime.moveTo(x, y);
+          contexteCanvasTimeOut.moveTo(x, y);
         } else {
-          contexteCanvasTime.lineTo(x, y);
+          contexteCanvasTimeOut.lineTo(x, y);
         }
 
         x += sliceWidth;
       }
 
-      contexteCanvasTime.lineTo(canvasTime.width, canvasTime.height / 2);
-      contexteCanvasTime.stroke();
+      contexteCanvasTimeOut.lineTo(canvasTimeOut.width, canvasTimeOut.height / 2);
+      contexteCanvasTimeOut.stroke();
   };
   //affichage frequence
   function DrawFreq() {
-    analyser.fftSize = 256;
-    var bufferLength = analyser.frequencyBinCount;
+    analyserOut.fftSize = 256;
+    var bufferLength = analyserOut.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
 
-    contexteCanvasFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
+    contexteCanvasFreqOut.clearRect(0, 0, canvasFreqOut.width, canvasFreqOut.height);
 
-    analyser.getByteFrequencyData(dataArray);
+    analyserOut.getByteFrequencyData(dataArray);
 
-    contexteCanvasFreq.fillStyle = 'rgb(0, 0, 0)';
-    contexteCanvasFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
+    contexteCanvasFreqOut.fillStyle = 'rgb(0, 0, 0)';
+    contexteCanvasFreqOut.fillRect(0, 0, canvasFreqOut.width, canvasFreqOut.height);
 
-    var barWidth = (canvasFreq.width / bufferLength) * 2.5;
+    var barWidth = (canvasFreqOut.width / bufferLength) * 2.5;
     var barHeight;
     var x = 0;
 
     for(var i = 0; i < bufferLength; i++) {
       barHeight = dataArray[i];
 
-      contexteCanvasFreq.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-      contexteCanvasFreq.fillRect(x,canvasFreq.height-barHeight/2,barWidth,barHeight/2);
+      contexteCanvasFreqOut.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+      contexteCanvasFreqOut.fillRect(x,canvasFreqOut.height-barHeight/2,barWidth,barHeight/2);
 
       x += barWidth + 1;
     }
@@ -171,3 +178,115 @@ function canvasDraw() {
 }
 
 canvasDraw()
+
+
+
+//entrée
+if (navigator.getUserMedia) {
+   console.log('getUserMedia supported.');
+   navigator.getUserMedia (
+      {
+         audio: true
+      },
+
+      function(stream) {
+         source = contexteAudio.createMediaStreamSource(stream);
+         source.connect(analyserIn);
+         noeudGain.connect(contexteAudio.destination);
+      },
+
+      // Error callback
+      function(err) {
+         console.log('The following gUM error occured: ' + err);
+      }
+   );
+} else {
+   console.log('getUserMedia not supported on your browser!');
+}
+
+
+
+//affichage entrée (temporaire)
+var canvasTimeIn = document.querySelector('.canvasTimeIn');
+var canvasFreqIn = document.querySelector('.canvasFreqIn');
+
+canvasTimeIn.width = largeur;
+canvasTimeIn.height = hauteur;
+canvasFreqIn.width = largeur;
+canvasFreqIn.height = hauteur;
+
+var contexteCanvasTimeIn = canvasTimeIn.getContext('2d');
+var contexteCanvasFreqIn = canvasFreqIn.getContext('2d');
+
+//affichage
+function canvasDrawIn() {
+  //affichage temps
+  function DrawTimeIn() {
+      analyserIn.fftSize = 2048;
+      var bufferLength = analyserIn.fftSize;
+      var dataArray = new Uint8Array(bufferLength);
+
+      analyserIn.getByteTimeDomainData(dataArray);
+
+       drawVisual = requestAnimationFrame(canvasDrawIn);
+
+      contexteCanvasTimeIn.fillStyle = 'rgb(200, 200, 200)';
+      contexteCanvasTimeIn.fillRect(0, 0, canvasTimeIn.width, canvasTimeIn.height);
+
+      contexteCanvasTimeIn.lineWidth = 2;
+      contexteCanvasTimeIn.strokeStyle = 'rgb(0, 0, 0)';
+
+      contexteCanvasTimeIn.beginPath();
+
+      var sliceWidth = canvasTimeIn.width * 1.0 / bufferLength;
+      var x = 0;
+
+      for (var i = 0; i < bufferLength; i++) {
+
+        var v = dataArray[i] / 128.0;
+        var y = v * canvasTimeIn.height / 2;
+
+        if (i === 0) {
+          contexteCanvasTimeIn.moveTo(x, y);
+        } else {
+          contexteCanvasTimeIn.lineTo(x, y);
+        }
+
+        x += sliceWidth;
+      }
+
+      contexteCanvasTimeIn.lineTo(canvasTimeIn.width, canvasTimeIn.height / 2);
+      contexteCanvasTimeIn.stroke();
+  };
+  //affichage frequence
+  function DrawFreqIn() {
+    analyserIn.fftSize = 256;
+    var bufferLength = analyserIn.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+
+    contexteCanvasFreqIn.clearRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+
+    analyserIn.getByteFrequencyData(dataArray);
+
+    contexteCanvasFreqIn.fillStyle = 'rgb(0, 0, 0)';
+    contexteCanvasFreqIn.fillRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+
+    var barWidth = (canvasFreqIn.width / bufferLength) * 2.5;
+    var barHeight;
+    var x = 0;
+
+    for(var i = 0; i < bufferLength; i++) {
+      barHeight = dataArray[i];
+
+      contexteCanvasFreqIn.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+      contexteCanvasFreqIn.fillRect(x,canvasFreqIn.height-barHeight/2,barWidth,barHeight/2);
+
+      x += barWidth + 1;
+    }
+  };
+
+  DrawTimeIn();
+  DrawFreqIn();
+}
+
+canvasDrawIn()
