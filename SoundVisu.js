@@ -103,108 +103,103 @@ canvasTimeOut.height = hauteur;
 canvasFreqOut.width = largeur;
 canvasFreqOut.height = hauteur;
 
-var contexteCanvasTimeOut = canvasTimeOut.getContext('2d');
-var contexteCanvasFreqOut = canvasFreqOut.getContext('2d');
-
 //affichage
-function canvasDraw() {
-  //affichage temps
-  function DrawTime() {
-      analyserOut.fftSize = 2048;
-      var bufferLength = analyserOut.fftSize;
-      var dataArray = new Uint8Array(bufferLength);
+function canvasDraw(canvasTime, canvasFreq) {
+	//affichage temps
+	function DrawTime(canvasTime) {
 
-      analyserOut.getByteTimeDomainData(dataArray);
+		analyserOut.fftSize = 2048;
+		var bufferLength = analyserOut.fftSize;
+		var dataArray = new Uint8Array(bufferLength);
+		analyserOut.getByteTimeDomainData(dataArray);
 
-       drawVisual = requestAnimationFrame(canvasDraw);
 
-      contexteCanvasTimeOut.fillStyle = 'rgb(200, 200, 200)';
-      contexteCanvasTimeOut.fillRect(0, 0, canvasTimeOut.width, canvasTimeOut.height);
+		var ctxTime = canvasTime.getContext('2d');	  
 
-      contexteCanvasTimeOut.lineWidth = 2;
-      contexteCanvasTimeOut.strokeStyle = 'rgb(0, 0, 0)';
 
-      contexteCanvasTimeOut.beginPath();
+		ctxTime.fillStyle = 'rgb(200, 200, 200)';
+		ctxTime.fillRect(0, 0, canvasTime.width, canvasTime.height);
 
-      var sliceWidth = canvasTimeOut.width * 1.0 / bufferLength;
-      var x = 0;
+		ctxTime.lineWidth = 2;
+		ctxTime.strokeStyle = 'rgb(0, 0, 0)';
 
-      for (var i = 0; i < bufferLength; i++) {
+		ctxTime.beginPath();
 
-        var v = dataArray[i] / 128.0;
-        var y = v * canvasTimeOut.height / 2;
+		var sliceWidth = canvasTime.width * 1.0 / bufferLength;
+		var x = 0;
 
-        if (i === 0) {
-          contexteCanvasTimeOut.moveTo(x, y);
-        } else {
-          contexteCanvasTimeOut.lineTo(x, y);
-        }
+		for (var i = 0; i < bufferLength; i++) {
 
-        x += sliceWidth;
-      }
+			var v = dataArray[i] / 128.0;
+			var y = v * canvasTime.height / 2;
 
-      contexteCanvasTimeOut.lineTo(canvasTimeOut.width, canvasTimeOut.height / 2);
-      contexteCanvasTimeOut.stroke();
-  };
-  //affichage frequence
-  function DrawFreq() {
-    analyserOut.fftSize = 256;
-    var bufferLength = analyserOut.frequencyBinCount;
-    var dataArray = new Uint8Array(bufferLength);
+			if (i === 0) {
+				ctxTime.moveTo(x, y);
+			} else {
+				ctxTime.lineTo(x, y);
+			}
 
-    contexteCanvasFreqOut.clearRect(0, 0, canvasFreqOut.width, canvasFreqOut.height);
+			x += sliceWidth;
+		}
 
-    analyserOut.getByteFrequencyData(dataArray);
+		ctxTime.lineTo(canvasTime.width, canvasTime.height / 2);
+		ctxTime.stroke();
+	};
+	//affichage frequence
+	function DrawFreq(canvasFreq) {
+		analyserOut.fftSize = 256;
+		var bufferLength = analyserOut.frequencyBinCount;
+		var dataArray = new Uint8Array(bufferLength);
+		analyserOut.getByteFrequencyData(dataArray);
 
-    contexteCanvasFreqOut.fillStyle = 'rgb(0, 0, 0)';
-    contexteCanvasFreqOut.fillRect(0, 0, canvasFreqOut.width, canvasFreqOut.height);
+		var ctxFreq = canvasFreq.getContext('2d');
 
-    var barWidth = (canvasFreqOut.width / bufferLength) * 2.5;
-    var barHeight;
-    var x = 0;
+		ctxFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-    for(var i = 0; i < bufferLength; i++) {
-      barHeight = dataArray[i];
 
-      contexteCanvasFreqOut.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-      contexteCanvasFreqOut.fillRect(x,canvasFreqOut.height-barHeight/2,barWidth,barHeight/2);
+		ctxFreq.fillStyle = 'rgb(0, 0, 0)';
+		ctxFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-      x += barWidth + 1;
-    }
-  };
+		var barWidth = (canvasFreq.width / bufferLength) * 2.5;
+		var barHeight;
+		var x = 0;
 
-  DrawTime();
-  DrawFreq();
+		for(var i = 0; i < bufferLength; i++) {
+			barHeight = dataArray[i];
+
+			ctxFreq.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+			ctxFreq.fillRect(x,canvasFreq.height-barHeight/2,barWidth,barHeight/2);
+
+			x += barWidth + 1;
+		}
+	}
+
+	DrawTime(canvasTimeOut);
+	DrawFreq(canvasFreqOut);
+	drawVisual = requestAnimationFrame(canvasDraw);
 }
 
-canvasDraw()
-
-
+canvasDraw(canvasTimeOut, canvasFreqOut);
 
 //entrée
 if (navigator.getUserMedia) {
-   console.log('getUserMedia supported.');
-   navigator.getUserMedia (
-      {
-         audio: true
-      },
+	console.log('getUserMedia supported.');
+	navigator.getUserMedia ({
+		audio: true
+	},
 
-      function(stream) {
-         source = contexteAudio.createMediaStreamSource(stream);
-         source.connect(analyserIn);
-         noeudGain.connect(contexteAudio.destination);
-      },
-
-      // Error callback
-      function(err) {
-         console.log('The following gUM error occured: ' + err);
-      }
-   );
+	function(stream) {
+		source = contexteAudio.createMediaStreamSource(stream);
+		source.connect(analyserIn);
+		noeudGain.connect(contexteAudio.destination);
+	},
+	// Error callback
+	function(err) {
+		console.log('The following gUM error occured: ' + err);
+	});
 } else {
-   console.log('getUserMedia not supported on your browser!');
+	console.log('getUserMedia not supported on your browser!');
 }
-
-
 
 //affichage entrée (temporaire)
 var canvasTimeIn = document.querySelector('.canvasTimeIn');
@@ -215,78 +210,155 @@ canvasTimeIn.height = hauteur;
 canvasFreqIn.width = largeur;
 canvasFreqIn.height = hauteur;
 
-var contexteCanvasTimeIn = canvasTimeIn.getContext('2d');
-var contexteCanvasFreqIn = canvasFreqIn.getContext('2d');
+//var contexteCanvasTimeIn = canvasTimeIn.getContext('2d');
+//var contexteCanvasFreqIn = canvasFreqIn.getContext('2d');
 
-//affichage
-function canvasDrawIn() {
-  //affichage temps
-  function DrawTimeIn() {
-      analyserIn.fftSize = 2048;
-      var bufferLength = analyserIn.fftSize;
-      var dataArray = new Uint8Array(bufferLength);
+//canvasDraw(canvasTimeIn, canvasFreqIn);
 
-      analyserIn.getByteTimeDomainData(dataArray);
+function canvasDrawIn(canvasTime, canvasFreq) {
+	//affichage temps
+	function DrawTimeIn(canvasTime) {
 
-       drawVisual = requestAnimationFrame(canvasDrawIn);
+		analyserIn.fftSize = 2048;
+		var bufferLength = analyserIn.fftSize;
+		var dataArray = new Uint8Array(bufferLength);
+		analyserIn.getByteTimeDomainData(dataArray);
 
-      contexteCanvasTimeIn.fillStyle = 'rgb(200, 200, 200)';
-      contexteCanvasTimeIn.fillRect(0, 0, canvasTimeIn.width, canvasTimeIn.height);
+		var ctxTime = canvasTime.getContext('2d');	  
 
-      contexteCanvasTimeIn.lineWidth = 2;
-      contexteCanvasTimeIn.strokeStyle = 'rgb(0, 0, 0)';
+		ctxTime.fillStyle = 'rgb(200, 200, 200)';
+		ctxTime.fillRect(0, 0, canvasTime.width, canvasTime.height);
 
-      contexteCanvasTimeIn.beginPath();
+		ctxTime.lineWidth = 2;
+		ctxTime.strokeStyle = 'rgb(0, 0, 0)';
 
-      var sliceWidth = canvasTimeIn.width * 1.0 / bufferLength;
-      var x = 0;
+		ctxTime.beginPath();
 
-      for (var i = 0; i < bufferLength; i++) {
+		var sliceWidth = canvasTime.width * 1.0 / bufferLength;
+		var x = 0;
 
-        var v = dataArray[i] / 128.0;
-        var y = v * canvasTimeIn.height / 2;
+		for (var i = 0; i < bufferLength; i++) {
 
-        if (i === 0) {
-          contexteCanvasTimeIn.moveTo(x, y);
-        } else {
-          contexteCanvasTimeIn.lineTo(x, y);
-        }
+			var v = dataArray[i] / 128.0;
+			var y = v * canvasTime.height / 2;
 
-        x += sliceWidth;
-      }
+			if (i === 0) {
+				ctxTime.moveTo(x, y);
+			} else {
+				ctxTime.lineTo(x, y);
+			}
 
-      contexteCanvasTimeIn.lineTo(canvasTimeIn.width, canvasTimeIn.height / 2);
-      contexteCanvasTimeIn.stroke();
-  };
-  //affichage frequence
-  function DrawFreqIn() {
-    analyserIn.fftSize = 256;
-    var bufferLength = analyserIn.frequencyBinCount;
-    var dataArray = new Uint8Array(bufferLength);
+			x += sliceWidth;
+		}
 
-    contexteCanvasFreqIn.clearRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+		ctxTime.lineTo(canvasTime.width, canvasTime.height / 2);
+		ctxTime.stroke();
+	};
+	//affichage frequence
+	function DrawFreqIn(canvasFreq) {
+		analyserIn.fftSize = 256;
+		var bufferLength = analyserIn.frequencyBinCount;
+		var dataArray = new Uint8Array(bufferLength);
+		analyserIn.getByteFrequencyData(dataArray);
 
-    analyserIn.getByteFrequencyData(dataArray);
+		var ctxFreq = canvasFreq.getContext('2d');
 
-    contexteCanvasFreqIn.fillStyle = 'rgb(0, 0, 0)';
-    contexteCanvasFreqIn.fillRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+		ctxFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-    var barWidth = (canvasFreqIn.width / bufferLength) * 2.5;
-    var barHeight;
-    var x = 0;
 
-    for(var i = 0; i < bufferLength; i++) {
-      barHeight = dataArray[i];
+		ctxFreq.fillStyle = 'rgb(0, 0, 0)';
+		ctxFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-      contexteCanvasFreqIn.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-      contexteCanvasFreqIn.fillRect(x,canvasFreqIn.height-barHeight/2,barWidth,barHeight/2);
+		var barWidth = (canvasFreq.width / bufferLength) * 2.5;
+		var barHeight;
+		var x = 0;
 
-      x += barWidth + 1;
-    }
-  };
+		for(var i = 0; i < bufferLength; i++) {
+			barHeight = dataArray[i];
 
-  DrawTimeIn();
-  DrawFreqIn();
+			ctxFreq.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+			ctxFreq.fillRect(x,canvasFreq.height-barHeight/2,barWidth,barHeight/2);
+
+			x += barWidth + 1;
+		}
+	}
+
+	DrawTimeIn(canvasTimeIn);
+	DrawFreqIn(canvasFreqIn);
+	drawVisual = requestAnimationFrame(canvasDrawIn);
 }
 
-canvasDrawIn()
+canvasDrawIn(canvasTimeIn, canvasFreqIn);
+
+/*
+//affichage
+function canvasDrawIn() {
+	//affichage temps
+	function DrawTimeIn() {
+		analyserIn.fftSize = 2048;
+		var bufferLength = analyserIn.fftSize;
+		var dataArray = new Uint8Array(bufferLength);
+
+		analyserIn.getByteTimeDomainData(dataArray);
+
+		contexteCanvasTimeIn.fillStyle = 'rgb(200, 200, 200)';
+		contexteCanvasTimeIn.fillRect(0, 0, canvasTimeIn.width, canvasTimeIn.height);
+
+		contexteCanvasTimeIn.lineWidth = 2;
+		contexteCanvasTimeIn.strokeStyle = 'rgb(0, 0, 0)';
+
+		contexteCanvasTimeIn.beginPath();
+
+		var sliceWidth = canvasTimeIn.width * 1.0 / bufferLength;
+		var x = 0;
+
+		for (var i = 0; i < bufferLength; i++) {
+		
+			var v = dataArray[i] / 128.0;
+			var y = v * canvasTimeIn.height / 2;
+
+			if (i === 0) {
+				contexteCanvasTimeIn.moveTo(x, y);
+			} else {
+				contexteCanvasTimeIn.lineTo(x, y);
+			}
+
+			x += sliceWidth;
+		}
+
+		contexteCanvasTimeIn.lineTo(canvasTimeIn.width, canvasTimeIn.height / 2);
+		contexteCanvasTimeIn.stroke();
+	};
+	//affichage frequence
+	function DrawFreqIn() {
+		analyserIn.fftSize = 256;
+		var bufferLength = analyserIn.frequencyBinCount;
+		var dataArray = new Uint8Array(bufferLength);
+
+		contexteCanvasFreqIn.clearRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+
+		analyserIn.getByteFrequencyData(dataArray);
+
+		contexteCanvasFreqIn.fillStyle = 'rgb(0, 0, 0)';
+		contexteCanvasFreqIn.fillRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
+
+		var barWidth = (canvasFreqIn.width / bufferLength) * 2.5;
+		var barHeight;
+		var x = 0;
+
+		for(var i = 0; i < bufferLength; i++) {
+			barHeight = dataArray[i];
+
+			contexteCanvasFreqIn.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+			contexteCanvasFreqIn.fillRect(x,canvasFreqIn.height-barHeight/2,barWidth,barHeight/2);
+
+			x += barWidth + 1;
+		}
+	};
+
+	DrawTimeIn();
+	DrawFreqIn();
+	drawVisual = requestAnimationFrame(canvasDrawIn);
+}
+
+canvasDrawIn()*/
