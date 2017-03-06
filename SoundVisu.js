@@ -10,8 +10,10 @@ var source;
 
 var oscillateur = contexteAudio.createOscillator();
 var noeudGain = contexteAudio.createGain();
+var GainTest = contexteAudio.createGain();
 var analyserOut = contexteAudio.createAnalyser();
 var analyserIn = contexteAudio.createAnalyser();
+//var biquad = contexteAudio.createBiquadFilter();
 
 analyserOut.smoothingTimeConstant = 0.85;
 oscillateur.connect(analyserOut);
@@ -191,7 +193,8 @@ if (navigator.getUserMedia) {
 	function(stream) {
 		source = contexteAudio.createMediaStreamSource(stream);
 		source.connect(analyserIn);
-		noeudGain.connect(contexteAudio.destination);
+		//analyserIn.connect(biquad);
+		analyserIn.connect(GainTest);
 	},
 	// Error callback
 	function(err) {
