@@ -7,25 +7,25 @@ navigator.getUserMedia = (navigator.getUserMedia ||
 
 var contexteAudio = new AudioContext();
 var source;
+var analyserIn = contexteAudio.createAnalyser();
+var biquad = contexteAudio.createBiquadFilter();
+var GainTest = contexteAudio.createGain();
 
 var oscillateur = contexteAudio.createOscillator();
 var noeudGain = contexteAudio.createGain();
-var GainTest = contexteAudio.createGain();
 var analyserOut = contexteAudio.createAnalyser();
-var analyserIn = contexteAudio.createAnalyser();
-//var biquad = contexteAudio.createBiquadFilter();
 
 analyserOut.smoothingTimeConstant = 0.85;
 oscillateur.connect(analyserOut);
 oscillateur.connect(noeudGain);
 noeudGain.connect(contexteAudio.destination);
 
-oscillateur.type = 'triangle';
+oscillateur.type = 'sine';
 oscillateur.frequency.value = 500; // valeur en hertz
 
 /*
  Bouton play et mute
-/!\ stop arrete le flux définitivement (why ?)  
+/!\ stop arrete le flux définitivement
 */
 $(".play").onclick = function(e) {
 	if( $(".play").value == "off") {
@@ -115,10 +115,8 @@ function canvasDraw(canvasTime, canvasFreq) {
 		var dataArray = new Uint8Array(bufferLength);
 		analyserOut.getByteTimeDomainData(dataArray);
 
-
 		var ctxTime = canvasTime.getContext('2d');	  
-
-
+		
 		ctxTime.fillStyle = 'rgb(200, 200, 200)';
 		ctxTime.fillRect(0, 0, canvasTime.width, canvasTime.height);
 
@@ -192,9 +190,9 @@ if (navigator.getUserMedia) {
 
 	function(stream) {
 		source = contexteAudio.createMediaStreamSource(stream);
-		source.connect(analyserIn);
-		//analyserIn.connect(biquad);
-		analyserIn.connect(GainTest);
+		source.connect(GainTest);
+		//GainTest.connect(biquad);
+		GainTest.connect(analyserIn);
 	},
 	// Error callback
 	function(err) {
@@ -212,11 +210,6 @@ canvasTimeIn.width = largeur;
 canvasTimeIn.height = hauteur;
 canvasFreqIn.width = largeur;
 canvasFreqIn.height = hauteur;
-
-//var contexteCanvasTimeIn = canvasTimeIn.getContext('2d');
-//var contexteCanvasFreqIn = canvasFreqIn.getContext('2d');
-
-//canvasDraw(canvasTimeIn, canvasFreqIn);
 
 function canvasDrawIn(canvasTime, canvasFreq) {
 	//affichage temps
@@ -292,76 +285,3 @@ function canvasDrawIn(canvasTime, canvasFreq) {
 }
 
 canvasDrawIn(canvasTimeIn, canvasFreqIn);
-
-/*
-//affichage
-function canvasDrawIn() {
-	//affichage temps
-	function DrawTimeIn() {
-		analyserIn.fftSize = 2048;
-		var bufferLength = analyserIn.fftSize;
-		var dataArray = new Uint8Array(bufferLength);
-
-		analyserIn.getByteTimeDomainData(dataArray);
-
-		contexteCanvasTimeIn.fillStyle = 'rgb(200, 200, 200)';
-		contexteCanvasTimeIn.fillRect(0, 0, canvasTimeIn.width, canvasTimeIn.height);
-
-		contexteCanvasTimeIn.lineWidth = 2;
-		contexteCanvasTimeIn.strokeStyle = 'rgb(0, 0, 0)';
-
-		contexteCanvasTimeIn.beginPath();
-
-		var sliceWidth = canvasTimeIn.width * 1.0 / bufferLength;
-		var x = 0;
-
-		for (var i = 0; i < bufferLength; i++) {
-		
-			var v = dataArray[i] / 128.0;
-			var y = v * canvasTimeIn.height / 2;
-
-			if (i === 0) {
-				contexteCanvasTimeIn.moveTo(x, y);
-			} else {
-				contexteCanvasTimeIn.lineTo(x, y);
-			}
-
-			x += sliceWidth;
-		}
-
-		contexteCanvasTimeIn.lineTo(canvasTimeIn.width, canvasTimeIn.height / 2);
-		contexteCanvasTimeIn.stroke();
-	};
-	//affichage frequence
-	function DrawFreqIn() {
-		analyserIn.fftSize = 256;
-		var bufferLength = analyserIn.frequencyBinCount;
-		var dataArray = new Uint8Array(bufferLength);
-
-		contexteCanvasFreqIn.clearRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
-
-		analyserIn.getByteFrequencyData(dataArray);
-
-		contexteCanvasFreqIn.fillStyle = 'rgb(0, 0, 0)';
-		contexteCanvasFreqIn.fillRect(0, 0, canvasFreqIn.width, canvasFreqIn.height);
-
-		var barWidth = (canvasFreqIn.width / bufferLength) * 2.5;
-		var barHeight;
-		var x = 0;
-
-		for(var i = 0; i < bufferLength; i++) {
-			barHeight = dataArray[i];
-
-			contexteCanvasFreqIn.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-			contexteCanvasFreqIn.fillRect(x,canvasFreqIn.height-barHeight/2,barWidth,barHeight/2);
-
-			x += barWidth + 1;
-		}
-	};
-
-	DrawTimeIn();
-	DrawFreqIn();
-	drawVisual = requestAnimationFrame(canvasDrawIn);
-}
-
-canvasDrawIn()*/
