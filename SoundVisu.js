@@ -65,7 +65,8 @@ $(".mute").onclick = function(e) {
 /* 
  mouvement de la souris
 */
-var frequenceMax = 6000;
+var frequenceMax = 11000
+;
 var volumeMax = 1;
 
 var frequenceInitiale = 3000;
