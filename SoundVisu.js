@@ -95,8 +95,10 @@ if (choix.value == "mouse") {
 function updatePage(e) {   
     positionX = (window.Event) ? e.pageX : e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
     positionY = (window.Event) ? e.pageY : e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+	
     
     oscillateur.frequency.value = (positionX/largeur) * frequenceMax;
+	$(".FreqValue").textContent = oscillateur.frequency.value;
     //noeudGain.gain.value = (positionY/hauteur) * volumeMax;
 
  //   ;
@@ -128,8 +130,8 @@ if (navigator.getUserMedia) {
 /*
 * Config canvas sortie
 */
-var largeur = window.innerWidth/2 - 50;
-var hauteur = window.innerHeight/2 - 100;
+var largeur = window.innerWidth/2;
+var hauteur = window.innerHeight/2;
 
 var canvasTimeOut = document.querySelector('.canvasTimeOut');
 var canvasFreqOut = document.querySelector('.canvasFreqOut');
