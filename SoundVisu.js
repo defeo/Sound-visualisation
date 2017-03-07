@@ -70,12 +70,8 @@ $(".mute").onclick = function(e) {
 /* 
  mouvement de la souris
 */
-var frequenceMax = 11000
-;
+var frequenceMax = 22000;
 var volumeMax = 1;
-
-var frequenceInitiale = 3000;
-var volumeInitial = 0.5;
 
 // coordonnées de la souris
 
@@ -94,14 +90,12 @@ if (choix.value == "mouse") {
 
 function updatePage(e) {   
     positionX = (window.Event) ? e.pageX : e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
-    positionY = (window.Event) ? e.pageY : e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+    //positionY = (window.Event) ? e.pageY : e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
 	
     
     oscillateur.frequency.value = (positionX/largeur) * frequenceMax;
 	$(".FreqValue").textContent = oscillateur.frequency.value;
-    //noeudGain.gain.value = (positionY/hauteur) * volumeMax;
-
- //   ;
+	//noeudGain.gain.value = (positionY/hauteur) * volumeMax;
 }
 
 /*
@@ -130,8 +124,8 @@ if (navigator.getUserMedia) {
 /*
 * Config canvas sortie
 */
-var largeur = window.innerWidth/2;
-var hauteur = window.innerHeight/2;
+var largeur = window.innerWidth -250;
+var hauteur = window.innerHeight/2 -100;
 
 var canvasTimeOut = document.querySelector('.canvasTimeOut');
 var canvasFreqOut = document.querySelector('.canvasFreqOut');
@@ -225,7 +219,7 @@ function canvasDraw(canvasTime, canvasFreq, analyser) {
 		ctxFreq.fillStyle = 'rgb(0, 0, 0)';
 		ctxFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-		var barWidth = (canvasFreq.width / bufferLength) * 2.5;
+		var barWidth = (canvasFreq.width / bufferLength);
 		var barHeight;
 		var x = 0;
 		for(var i = 0; i < bufferLength; i++) {
