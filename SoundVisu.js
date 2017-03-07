@@ -21,7 +21,6 @@ oscillateur.connect(noeudGain);
 noeudGain.connect(contexteAudio.destination);
 
 oscillateur.type = 'sine';
-oscillateur.frequency.value = 500; // valeur en hertz
 
 /*
  Bouton play et mute
@@ -80,14 +79,19 @@ var positionY;
 // récupère les nouvelles coordonnées de la souris quand elle bouge
 // puis assigne les nouvelles valeurs de gain et de pitch
 
-document.onmousemove = updatePage;
+var choix = $(".choixFreq");
+if (choix.value == "mouse") {
+	document.onmousemove = updatePage;
+}else {
+	oscillateur.frequency.value = $(".freq").value;
+}
 
 function updatePage(e) {   
     positionX = (window.Event) ? e.pageX : e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
     positionY = (window.Event) ? e.pageY : e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
     
     oscillateur.frequency.value = (positionX/largeur) * frequenceMax;
-    noeudGain.gain.value = (positionY/hauteur) * volumeMax;
+    //noeudGain.gain.value = (positionY/hauteur) * volumeMax;
 
  //   ;
 }
@@ -148,8 +152,8 @@ function canvasDraw(canvasTime, canvasFreq) {
 	};
 	//affichage frequence
 	function DrawFreq(canvasFreq) {
-		analyserOut.fftSize = 256;
-		var bufferLength = analyserOut.frequencyBinCount;
+		analyserOut.fftSize = 2048;
+		var bufferLength = analyserOut.frequencyBinCount*4;
 		var dataArray = new Uint8Array(bufferLength);
 		analyserOut.getByteFrequencyData(dataArray);
 
@@ -164,7 +168,6 @@ function canvasDraw(canvasTime, canvasFreq) {
 		var barWidth = (canvasFreq.width / bufferLength) * 2.5;
 		var barHeight;
 		var x = 0;
-
 		for(var i = 0; i < bufferLength; i++) {
 			barHeight = dataArray[i];
 
@@ -253,8 +256,8 @@ function canvasDrawIn(canvasTime, canvasFreq) {
 	};
 	//affichage frequence
 	function DrawFreqIn(canvasFreq) {
-		analyserIn.fftSize = 256;
-		var bufferLength = analyserIn.frequencyBinCount;
+		analyserIn.fftSize = 2048;
+		var bufferLength = analyserIn.frequencyBinCount*4;
 		var dataArray = new Uint8Array(bufferLength);
 		analyserIn.getByteFrequencyData(dataArray);
 
@@ -262,6 +265,13 @@ function canvasDrawIn(canvasTime, canvasFreq) {
 
 		ctxFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
 
+
+var TenPercent = dataArray.slice(-400);
+		for (var j =0; j<TenPercent.length; j++) {
+			if(TenPercent[j] != 0) {
+				console.log(TenPercent[j]);
+			}
+		}
 
 		ctxFreq.fillStyle = 'rgb(0, 0, 0)';
 		ctxFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
@@ -286,3 +296,4 @@ function canvasDrawIn(canvasTime, canvasFreq) {
 }
 
 canvasDrawIn(canvasTimeIn, canvasFreqIn);
+//$(".gotcha").textContent = "gotcha !!!";
