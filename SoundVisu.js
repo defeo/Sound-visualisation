@@ -12,15 +12,21 @@ var biquad = contexteAudio.createBiquadFilter();
 var GainTest = contexteAudio.createGain();
 
 var oscillateur = contexteAudio.createOscillator();
+oscillateur.type = 'sine';
 var noeudGain = contexteAudio.createGain();
 var analyserOut = contexteAudio.createAnalyser();
+
+var musiqueSrc = $(".musique")
+var musique = contexteAudio.createMediaElementSource(musique);
 
 analyserOut.smoothingTimeConstant = 0.85;
 oscillateur.connect(analyserOut);
 oscillateur.connect(noeudGain);
+musique.connect(analyserOut);
+musique.connect(noeudGain);
+
 noeudGain.connect(contexteAudio.destination);
 
-oscillateur.type = 'sine';
 
 /*
  Bouton play et mute
@@ -265,7 +271,7 @@ function canvasDrawIn(canvasTime, canvasFreq) {
 
 		ctxFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
 
-
+//test
 var TenPercent = dataArray.slice(-400);
 		for (var j =0; j<TenPercent.length; j++) {
 			if(TenPercent[j] != 0) {
@@ -296,4 +302,3 @@ var TenPercent = dataArray.slice(-400);
 }
 
 canvasDrawIn(canvasTimeIn, canvasFreqIn);
-//$(".gotcha").textContent = "gotcha !!!";
