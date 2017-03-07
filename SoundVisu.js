@@ -17,7 +17,7 @@ var noeudGain = contexteAudio.createGain();
 var analyserOut = contexteAudio.createAnalyser();
 
 var musiqueSrc = $(".musique")
-var musique = contexteAudio.createMediaElementSource(musique);
+var musique = contexteAudio.createMediaElementSource(musiqueSrc);
 
 analyserOut.smoothingTimeConstant = 0.85;
 oscillateur.connect(analyserOut);
@@ -103,7 +103,30 @@ function updatePage(e) {
 }
 
 /*
- Canvas sortie
+* Config Entrée micro
+*/
+if (navigator.getUserMedia) {
+	console.log('getUserMedia supported.');
+	navigator.getUserMedia ({
+		audio: true
+	},
+
+	function(stream) {
+		source = contexteAudio.createMediaStreamSource(stream);
+		source.connect(GainTest);
+		GainTest.connect(analyserIn);
+	},
+	// Error callback
+	function(err) {
+		console.log('The following gUM error occured: ' + err);
+	});
+} else {
+	console.log('getUserMedia not supported on your browser!');
+}
+
+
+/*
+* Config canvas sortie
 */
 var largeur = window.innerWidth/2 - 50;
 var hauteur = window.innerHeight/2 - 100;
@@ -116,15 +139,44 @@ canvasTimeOut.height = hauteur;
 canvasFreqOut.width = largeur;
 canvasFreqOut.height = hauteur;
 
-//affichage
-function canvasDraw(canvasTime, canvasFreq) {
-	//affichage temps
-	function DrawTime(canvasTime) {
 
-		analyserOut.fftSize = 2048;
+canvasDraw(canvasTimeOut, canvasFreqOut, analyserOut);
+
+/*
+* Config canvas Entrée
+*/
+var canvasTimeIn = document.querySelector('.canvasTimeIn');
+var canvasFreqIn = document.querySelector('.canvasFreqIn');
+
+canvasTimeIn.width = largeur;
+canvasTimeIn.height = hauteur;
+canvasFreqIn.width = largeur;
+canvasFreqIn.height = hauteur;
+
+canvasDraw(canvasTimeIn, canvasFreqIn, analyserIn);
+
+/*
+//test
+var TenPercent = dataArray.slice(-400);
+		for (var j =0; j<TenPercent.length; j++) {
+			if(TenPercent[j] != 0) {
+				console.log(TenPercent[j]);
+			}
+		}
+
+*/
+
+/*
+*AFFICHAGE
+*/
+function canvasDraw(canvasTime, canvasFreq, analyser) {
+	//affichage temps
+	function DrawTime() {
+
+		analyser.fftSize = 2048;
 		var bufferLength = analyserOut.fftSize;
 		var dataArray = new Uint8Array(bufferLength);
-		analyserOut.getByteTimeDomainData(dataArray);
+		analyser.getByteTimeDomainData(dataArray);
 
 		var ctxTime = canvasTime.getContext('2d');	  
 		
@@ -157,11 +209,11 @@ function canvasDraw(canvasTime, canvasFreq) {
 		ctxTime.stroke();
 	};
 	//affichage frequence
-	function DrawFreq(canvasFreq) {
-		analyserOut.fftSize = 2048;
-		var bufferLength = analyserOut.frequencyBinCount*4;
+	function DrawFreq() {
+		analyser.fftSize = 2048;
+		var bufferLength = analyserOut.frequencyBinCount*5;
 		var dataArray = new Uint8Array(bufferLength);
-		analyserOut.getByteFrequencyData(dataArray);
+		analyser.getByteFrequencyData(dataArray);
 
 		var ctxFreq = canvasFreq.getContext('2d');
 
@@ -184,121 +236,8 @@ function canvasDraw(canvasTime, canvasFreq) {
 		}
 	}
 
-	DrawTime(canvasTimeOut);
-	DrawFreq(canvasFreqOut);
-	drawVisual = requestAnimationFrame(canvasDraw);
+	DrawTime();
+	DrawFreq();
+	drawVisual = requestAnimationFrame(canvasDraw.bind(null, canvasTime, canvasFreq, analyser));
 }
 
-canvasDraw(canvasTimeOut, canvasFreqOut);
-
-//entrée
-if (navigator.getUserMedia) {
-	console.log('getUserMedia supported.');
-	navigator.getUserMedia ({
-		audio: true
-	},
-
-	function(stream) {
-		source = contexteAudio.createMediaStreamSource(stream);
-		source.connect(GainTest);
-		//GainTest.connect(biquad);
-		GainTest.connect(analyserIn);
-	},
-	// Error callback
-	function(err) {
-		console.log('The following gUM error occured: ' + err);
-	});
-} else {
-	console.log('getUserMedia not supported on your browser!');
-}
-
-//affichage entrée (temporaire)
-var canvasTimeIn = document.querySelector('.canvasTimeIn');
-var canvasFreqIn = document.querySelector('.canvasFreqIn');
-
-canvasTimeIn.width = largeur;
-canvasTimeIn.height = hauteur;
-canvasFreqIn.width = largeur;
-canvasFreqIn.height = hauteur;
-
-function canvasDrawIn(canvasTime, canvasFreq) {
-	//affichage temps
-	function DrawTimeIn(canvasTime) {
-
-		analyserIn.fftSize = 2048;
-		var bufferLength = analyserIn.fftSize;
-		var dataArray = new Uint8Array(bufferLength);
-		analyserIn.getByteTimeDomainData(dataArray);
-
-		var ctxTime = canvasTime.getContext('2d');	  
-
-		ctxTime.fillStyle = 'rgb(200, 200, 200)';
-		ctxTime.fillRect(0, 0, canvasTime.width, canvasTime.height);
-
-		ctxTime.lineWidth = 2;
-		ctxTime.strokeStyle = 'rgb(0, 0, 0)';
-
-		ctxTime.beginPath();
-
-		var sliceWidth = canvasTime.width * 1.0 / bufferLength;
-		var x = 0;
-
-		for (var i = 0; i < bufferLength; i++) {
-
-			var v = dataArray[i] / 128.0;
-			var y = v * canvasTime.height / 2;
-
-			if (i === 0) {
-				ctxTime.moveTo(x, y);
-			} else {
-				ctxTime.lineTo(x, y);
-			}
-
-			x += sliceWidth;
-		}
-
-		ctxTime.lineTo(canvasTime.width, canvasTime.height / 2);
-		ctxTime.stroke();
-	};
-	//affichage frequence
-	function DrawFreqIn(canvasFreq) {
-		analyserIn.fftSize = 2048;
-		var bufferLength = analyserIn.frequencyBinCount*4;
-		var dataArray = new Uint8Array(bufferLength);
-		analyserIn.getByteFrequencyData(dataArray);
-
-		var ctxFreq = canvasFreq.getContext('2d');
-
-		ctxFreq.clearRect(0, 0, canvasFreq.width, canvasFreq.height);
-
-//test
-var TenPercent = dataArray.slice(-400);
-		for (var j =0; j<TenPercent.length; j++) {
-			if(TenPercent[j] != 0) {
-				console.log(TenPercent[j]);
-			}
-		}
-
-		ctxFreq.fillStyle = 'rgb(0, 0, 0)';
-		ctxFreq.fillRect(0, 0, canvasFreq.width, canvasFreq.height);
-
-		var barWidth = (canvasFreq.width / bufferLength) * 2.5;
-		var barHeight;
-		var x = 0;
-
-		for(var i = 0; i < bufferLength; i++) {
-			barHeight = dataArray[i];
-
-			ctxFreq.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-			ctxFreq.fillRect(x,canvasFreq.height-barHeight/2,barWidth,barHeight/2);
-
-			x += barWidth + 1;
-		}
-	}
-
-	DrawTimeIn(canvasTimeIn);
-	DrawFreqIn(canvasFreqIn);
-	drawVisual = requestAnimationFrame(canvasDrawIn);
-}
-
-canvasDrawIn(canvasTimeIn, canvasFreqIn);
