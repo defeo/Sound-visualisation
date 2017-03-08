@@ -6,47 +6,47 @@
 </head>
 <body>
 
-<select class="choixFreq" name="choixFreq">
-	<option value="mouse">mouvement souris</option>
-	<option value="fixe">choix frequence</option>
-</select>
-<input type="text" class="freq" pattern="[0-9]{1,5}"></input>
-</br>
-
-<audio class="musique" controls="controls" preload="none" loop="loop">
-	<source src="musique.ogg" type="audio/ogg" />
-	test ogg
-</audio>
-
-
+<div>
+	choix de la Frequence
+	</br>
+	<input type="text" class="choixFreq" pattern="[0-9]{1,5}" value="11000" hidden></input>
+	</br>
+	<input type="range" class="freqSlider" value="50" max="100" min="0"></input>
+	<div id="percentValue">50</div>
+	</br>
+	Musique
+	</br>
+	<audio class="musique" controls="controls" preload="none" loop="loop">
+		<source src="musique.ogg" type="audio/ogg" />
+	</audio>
+</div>
 </br>
 <button type="button" value="off" class="play">play</button>
 <button type="button" value="off" class="mute">mute</button>
 <br/>
 <div> sortie audio 
 </br>
-frequence = <p class="FreqValue"></p>
-<canvas class="canvasFreqOut">b</canvas>
+frequence = <div class="FreqValue"></div>
 	<table>
 		<tr>
-			<th>temps</th>
-			<th>frequence</th>
+			<th>Frequence</th>
+			<th>Temps</th>
 		</tr>
 		<tr>
+			<td><canvas class="canvasFreqOut">b</canvas></td>
 			<td><canvas class="canvasTimeOut">a</canvas></td>
-			<td></td>
 		</tr>
 	</table>
 </div>
 <div> entrée audio (soon)
 	<table>
 		<tr>
-			<th>temps</th>
-			<th>frequence</th>
+			<th>Frequence</th>
+			<th>Temps</th>
 		</tr>
 		<tr>
-			<td><canvas class="canvasTimeIn">soon</canvas></td>
-			<td><canvas class="canvasFreqIn">soon</canvas></td>
+			<td><canvas class="canvasFreqIn">b</canvas></td>
+			<td><canvas class="canvasTimeIn">a</canvas></td>
 		</tr>
 	</table>
 </div>

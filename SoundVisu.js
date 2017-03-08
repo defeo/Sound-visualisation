@@ -4,6 +4,10 @@ navigator.getUserMedia = (navigator.getUserMedia ||
                           navigator.mozGetUserMedia ||
                           navigator.msGetUserMedia);
 
+var largeur = window.innerWidth/2 - 50;
+var hauteur = window.innerHeight/3 -100;
+var FREQUENCEMAX = 22000;
+var VOLUMEMAX = 1;
 
 var contexteAudio = new AudioContext();
 var source;
@@ -27,6 +31,34 @@ musique.connect(noeudGain);
 
 noeudGain.connect(contexteAudio.destination);
 
+var freqSlider = $(".freqSlider");
+var valeur = $("#percentValue");
+freqSlider.addEventListener("change", function (e)  {
+	valeur.textContent = e.target.value;
+	updateFreq(e.target.value);
+});
+
+/* a refaire
+var choix = $(".choixFreq");
+choix.addEventListener("change", function(e) {
+	if(e.target.value > FREQUENCEMAX) {
+		updateFreq(e.target.value);
+	}	
+});
+
+if (choix.value > FREQUENCEMAX) {
+	updateFreq(choix.value);
+	freqSlider.value = choix.value;
+	percentValue = choix.value;
+}else {
+	console.log("ERREUR : Frequence trop haute");
+}
+*/
+
+function updateFreq(freq) {  
+    oscillateur.frequency.value = (freq/100) * FREQUENCEMAX;
+	$(".FreqValue").textContent = oscillateur.frequency.value;
+}
 
 /*
  Bouton play et mute
@@ -67,37 +99,6 @@ $(".mute").onclick = function(e) {
 	}
 }
 
-/* 
- mouvement de la souris
-*/
-var frequenceMax = 22000;
-var volumeMax = 1;
-
-// coordonnées de la souris
-
-var positionX;
-var positionY;
-
-// récupère les nouvelles coordonnées de la souris quand elle bouge
-// puis assigne les nouvelles valeurs de gain et de pitch
-
-var choix = $(".choixFreq");
-if (choix.value == "mouse") {
-	document.onmousemove = updatePage;
-}else {
-	oscillateur.frequency.value = $(".freq").value;
-}
-
-function updatePage(e) {   
-    positionX = (window.Event) ? e.pageX : e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
-    //positionY = (window.Event) ? e.pageY : e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
-	
-    
-    oscillateur.frequency.value = (positionX/largeur) * frequenceMax;
-	$(".FreqValue").textContent = oscillateur.frequency.value;
-	//noeudGain.gain.value = (positionY/hauteur) * volumeMax;
-}
-
 /*
 * Config Entrée micro
 */
@@ -124,9 +125,6 @@ if (navigator.getUserMedia) {
 /*
 * Config canvas sortie
 */
-var largeur = window.innerWidth -250;
-var hauteur = window.innerHeight/2 -100;
-
 var canvasTimeOut = document.querySelector('.canvasTimeOut');
 var canvasFreqOut = document.querySelector('.canvasFreqOut');
 
@@ -152,23 +150,11 @@ canvasFreqIn.height = hauteur;
 canvasDraw(canvasTimeIn, canvasFreqIn, analyserIn);
 
 /*
-//test
-var TenPercent = dataArray.slice(-400);
-		for (var j =0; j<TenPercent.length; j++) {
-			if(TenPercent[j] != 0) {
-				console.log(TenPercent[j]);
-			}
-		}
-
-*/
-
-/*
 *AFFICHAGE
 */
 function canvasDraw(canvasTime, canvasFreq, analyser) {
 	//affichage temps
 	function DrawTime() {
-
 		analyser.fftSize = 2048;
 		var bufferLength = analyserOut.fftSize;
 		var dataArray = new Uint8Array(bufferLength);
@@ -207,7 +193,7 @@ function canvasDraw(canvasTime, canvasFreq, analyser) {
 	//affichage frequence
 	function DrawFreq() {
 		analyser.fftSize = 2048;
-		var bufferLength = analyserOut.frequencyBinCount*5;
+		var bufferLength = analyserOut.frequencyBinCount;
 		var dataArray = new Uint8Array(bufferLength);
 		analyser.getByteFrequencyData(dataArray);
 
@@ -224,11 +210,11 @@ function canvasDraw(canvasTime, canvasFreq, analyser) {
 		var x = 0;
 		for(var i = 0; i < bufferLength; i++) {
 			barHeight = dataArray[i];
-
+			checkFreq(dataArray[i]);
 			ctxFreq.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-			ctxFreq.fillRect(x,canvasFreq.height-barHeight/2,barWidth,barHeight/2);
+			ctxFreq.fillRect(x,canvasFreq.height-(barHeight/2),barWidth,barHeight);
 
-			x += barWidth + 1;
+			x += barWidth;
 		}
 	}
 
@@ -237,3 +223,8 @@ function canvasDraw(canvasTime, canvasFreq, analyser) {
 	drawVisual = requestAnimationFrame(canvasDraw.bind(null, canvasTime, canvasFreq, analyser));
 }
 
+function checkFreq(freq) {
+	if(freq == 9240) {
+			console.log("gotcha");
+	}
+}
