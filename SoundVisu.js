@@ -12,8 +12,10 @@ var VOLUMEMAX = 1;
 var contexteAudio = new AudioContext();
 var source;
 var analyserIn = contexteAudio.createAnalyser();
-var biquad = contexteAudio.createBiquadFilter();
+//var biquad = contexteAudio.createBiquadFilter();
 var GainTest = contexteAudio.createGain();
+analyserIn.minDecibels = -200;
+
 
 var oscillateur = contexteAudio.createOscillator();
 oscillateur.type = 'sine';
@@ -30,6 +32,7 @@ musique.connect(analyserOut);
 musique.connect(noeudGain);
 
 noeudGain.connect(contexteAudio.destination);
+
 
 var freqSlider = $(".freqSlider");
 var valeur = $("#percentValue");
@@ -110,8 +113,8 @@ if (navigator.getUserMedia) {
 
 	function(stream) {
 		source = contexteAudio.createMediaStreamSource(stream);
-		source.connect(GainTest);
-		GainTest.connect(analyserIn);
+		source.connect(analyserIn);
+		//GainTest.connect(analyserIn);
 	},
 	// Error callback
 	function(err) {
@@ -192,7 +195,7 @@ function canvasDraw(canvasTime, canvasFreq, analyser) {
 	};
 	//affichage frequence
 	function DrawFreq() {
-		analyser.fftSize = 2048;
+		analyser.fftSize = 256;
 		var bufferLength = analyserOut.frequencyBinCount;
 		var dataArray = new Uint8Array(bufferLength);
 		analyser.getByteFrequencyData(dataArray);
